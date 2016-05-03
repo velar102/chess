@@ -6,6 +6,10 @@ import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 import javafx.scene.Scene;
 import java.util.ArrayList;
+import javafx.event.EventHandler;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class Board extends Scene {
@@ -14,6 +18,7 @@ public class Board extends Scene {
 
     public double squareSize;
     public ArrayList<Rectangle> board;
+    public ImageView[] imgView;
     
     public Board(Parent theParent, int XSize, int YSize, Color color, Stage primaryStage) {
         super(theParent, XSize, YSize, color);
@@ -76,9 +81,14 @@ public class Board extends Scene {
             board.add(new Rectangle());
         }
         
+        imgView = new ImageView[64];
+        Image img = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/pawn.png");
+
+        
         for (Rectangle square : board) {
             
             int i = board.indexOf(square);
+            
             if ( i < 8 || (i > 15 && i < 24) || (i > 31 && i < 40) || (i > 47 && i < 56) )
             {
                 if (i % 2 == 0) {
@@ -100,7 +110,7 @@ public class Board extends Scene {
             
             square.heightProperty().bind(squareSize);
             square.widthProperty().bind(squareSize);
-  
+ 
             DoubleBinding xPos = new DoubleBinding() {
                 {
                     super.bind(xOffset, squareSize);
@@ -111,7 +121,6 @@ public class Board extends Scene {
                     return (xOffset.get() + ((i % 8) + 1) * squareSize.get());
                 }
             };
-
             square.xProperty().bind(xPos);
             
             DoubleBinding yPos = new DoubleBinding() {
@@ -124,8 +133,46 @@ public class Board extends Scene {
                     return (yOffset.get() + ((i / 8) + 1) * squareSize.get());
                 }
             };
-             
+            
             square.yProperty().bind(yPos);
+            
+            if (i > 47 && i < 56)
+            {
+                imgView[i] = new ImageView(img);
+                imgView[i].fitHeightProperty().bind(squareSize);
+                imgView[i].fitWidthProperty().bind(squareSize);
+                imgView[i].xProperty().bind(square.xProperty());
+                imgView[i].yProperty().bind(square.yProperty());
+            }
+            else {
+                imgView[i] = new ImageView();
+            }
+            final Delta dragDelta = new Delta();
+            imgView[i].setOnMousePressed(new EventHandler<MouseEvent>() {
+              @Override public void handle(MouseEvent mouseEvent) {
+                // record a delta distance for the drag and drop operation.
+                dragDelta.x = imgView[i].getLayoutX() - mouseEvent.getSceneX();
+                dragDelta.y = imgView[i].getLayoutY() - mouseEvent.getSceneY();
+                imgView[i].setCursor(Cursor.MOVE);
+              }
+            });
+            imgView[i].setOnMouseReleased(new EventHandler<MouseEvent>() {
+              @Override public void handle(MouseEvent mouseEvent) {
+                imgView[i].setCursor(Cursor.HAND);
+                
+              }
+            });
+            imgView[i].setOnMouseDragged(new EventHandler<MouseEvent>() {
+              @Override public void handle(MouseEvent mouseEvent) {
+                imgView[i].setLayoutX(mouseEvent.getSceneX() + dragDelta.x);
+                imgView[i].setLayoutY(mouseEvent.getSceneY() + dragDelta.y);
+              }
+            });
+            imgView[i].setOnMouseEntered(new EventHandler<MouseEvent>() {
+              @Override public void handle(MouseEvent mouseEvent) {
+                imgView[i].setCursor(Cursor.HAND);
+              }
+            });
         }
     }
     
@@ -149,3 +196,5 @@ public class Board extends Scene {
 
     */
 }
+
+class Delta { double x, y; }

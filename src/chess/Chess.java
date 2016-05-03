@@ -1,4 +1,4 @@
-/*
+    /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -16,6 +16,9 @@ import javafx.stage.Stage;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Group;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
@@ -55,12 +58,21 @@ public class Chess extends Application {
         primaryStage.setWidth(1600);
         primaryStage.setHeight(900);
         Group root = new Group();
+        //Canvas canvas = new Canvas( 488, 640 );
+        //GraphicsContext gc = canvas.getGraphicsContext2D();
         
+  //      Image img = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/pawn.png");
+  //      ImageView imgView = new ImageView(img);
+        
+
 
         Board board = new Board(root, 300, 250, Color.BURLYWOOD, primaryStage);
         
+//        imgView.fitHeightProperty().bind(board.squareSize);
+        
         root.getChildren().addAll(board.board);
-
+        root.getChildren().addAll(board.imgView);
+            
         primaryStage.setScene(board);
         primaryStage.show();
         
