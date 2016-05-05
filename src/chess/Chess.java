@@ -65,8 +65,10 @@ public class Chess extends Application {
   //      ImageView imgView = new ImageView(img);
         
 
-
-        Board board = new Board(root, 300, 250, Color.BURLYWOOD, primaryStage);
+        BoardModel model = new BoardModel();
+        BoardController board = new BoardController(root, 300, 250, Color.BURLYWOOD, primaryStage, model);
+        
+        model.printBoard();
         
 //        imgView.fitHeightProperty().bind(board.squareSize);
         
