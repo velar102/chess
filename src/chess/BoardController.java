@@ -86,19 +86,19 @@ public class BoardController extends Scene {
         }
         
         imgView = new ImageView[64];
-        Image whiteRook = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/rook.png");
-        Image blackRook = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/rookB.png");
-        Image whitePawn = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/pawn.png");
-        Image blackPawn = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/pawnB.png");
-        Image blackKnight = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/knightB.png");
-        Image blackBishop = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/bishopB.png");
-        Image blackQueen = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/queenB.png");
-        Image blackKing = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/kingB.png");
         
-        Image whiteKnight = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/knight.png");
-        Image whiteBishop = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/bishop.png");
-        Image whiteQueen = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/queen.png");
-        Image whiteKing = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/king.png");
+        Image whiteRook = new Image("resources/pieceImages/rook.png");
+        Image blackRook = new Image("resources/pieceImages/rookB.png");
+        Image whiteKnight = new Image("resources/pieceImages/knight.png");
+        Image blackKnight = new Image("resources/pieceImages/knightB.png");
+        Image whiteBishop = new Image("resources/pieceImages/bishop.png");
+        Image blackBishop = new Image("resources/pieceImages/bishopB.png");
+        Image whiteQueen = new Image("resources/pieceImages/queen.png");
+        Image blackQueen = new Image("resources/pieceImages/queenB.png");
+        Image whiteKing = new Image("resources/pieceImages/king.png");
+        Image blackKing = new Image("resources/pieceImages/kingB.png");
+        Image whitePawn = new Image("resources/pieceImages/pawn.png");
+        Image blackPawn = new Image("resources/pieceImages/pawnB.png");
         
         for (Rectangle square : board) {
             
