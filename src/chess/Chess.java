@@ -6,21 +6,17 @@
 package chess;
 
 import javafx.application.Application;
-import javafx.beans.binding.DoubleBinding;
+import javafx.stage.Stage;
+import javafx.scene.Group;
+import javafx.scene.control.*;
+import javafx.scene.effect.*;
+import java.util.AbstractMap.SimpleEntry;
+import javafx.scene.paint.Color;
+import java.util.Map.Entry;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Stage;
-import javafx.beans.value.ObservableValue;
-import javafx.beans.value.ChangeListener;
-import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.image.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Rotate;
 
 /**
  *
@@ -28,7 +24,7 @@ import javafx.scene.shape.Rectangle;
  */
 public class Chess extends Application {
     
-    @Override
+    
         /*
     public void start(Stage primaryStage) {
         Button btn = new Button();
@@ -50,31 +46,34 @@ public class Chess extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }*/
+    final Entry<String, Effect>[] effects = new Entry[] {
+        new SimpleEntry<String, Effect>("Sepia Tone", new SepiaTone()),
+        new SimpleEntry<String, Effect>("Glow", new Glow()),
+        new SimpleEntry<String, Effect>("Shadow", new DropShadow())
+    };
     
+    @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Chess");
-        primaryStage.setX(100);
-        primaryStage.setY(100);
+        primaryStage.setX(0);
+        primaryStage.setY(0);
         primaryStage.setWidth(1600);
         primaryStage.setHeight(900);
-        Group root = new Group();
-        //Canvas canvas = new Canvas( 488, 640 );
-        //GraphicsContext gc = canvas.getGraphicsContext2D();
-        
-  //      Image img = new Image("file:///C:/Users/Drago/OneDrive/Documents/GitHub/chess/src/chess/pawn.png");
-  //      ImageView imgView = new ImageView(img);
-        
 
+        Group root = new Group();
+        
         BoardModel model = new BoardModel();
-        BoardController board = new BoardController(root, 300, 250, Color.BURLYWOOD, primaryStage, model);
+        BoardController board = new BoardController(root, 0, 0, Color.BURLYWOOD, primaryStage, model);
         
         model.printBoard();
-        
-//        imgView.fitHeightProperty().bind(board.squareSize);
+ 
+        root.getChildren().addAll(board.menuBar);
         
         root.getChildren().addAll(board.board);
         root.getChildren().addAll(board.imgView);
-            
+        
+ 
+        
         primaryStage.setScene(board);
         primaryStage.show();
         
