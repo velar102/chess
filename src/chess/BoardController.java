@@ -1,13 +1,9 @@
 package chess;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import javafx.beans.binding.DoubleBinding;
 import javafx.scene.*;
 import javafx.scene.paint.*;
@@ -25,7 +21,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
 public class BoardController extends Scene {
@@ -43,9 +38,7 @@ public class BoardController extends Scene {
     {
         menuBar = new MenuBar();
         
-        Menu menuFile = new Menu("File");
         Menu menuNetwork = new Menu("Network");
-        Menu menuView = new Menu("View");
         
         MenuItem host = new MenuItem("Host");
         host.setOnAction(new EventHandler<ActionEvent>() {
@@ -63,11 +56,12 @@ public class BoardController extends Scene {
  
         menuNetwork.getItems().addAll(host, client);
  
-        menuBar.getMenus().addAll(menuFile, menuNetwork, menuView);
+        menuBar.getMenus().addAll(menuNetwork);
     }
     
     private void startClient()
     {
+        
         try {
             socket = new DatagramSocket();
             IPAddress = InetAddress.getByName("localhost");
@@ -142,6 +136,10 @@ public class BoardController extends Scene {
                         }
                         
                         model.printBoard();
+                        
+        PacketListener pListener = new PacketListener(this, socket);
+        Thread t = new Thread(pListener);
+        t.start();
     }
     
     private void startHosting()
@@ -169,6 +167,10 @@ public class BoardController extends Scene {
         String sentence = new String(receivePacket.getData());
         IPAddress = receivePacket.getAddress();
         port = receivePacket.getPort();
+        
+        PacketListener pListener = new PacketListener(this, socket);
+        Thread t = new Thread(pListener);
+        t.start();
     }
     
     private DatagramSocket socket;
@@ -176,12 +178,14 @@ public class BoardController extends Scene {
     private int port;
     private boolean isClient;
     private BoardModel model;
+    private boolean noMove;
 
     public BoardController(Parent theParent, int XSize, int YSize, Color color, Stage primaryStage, BoardModel modelIn) {
         super(theParent, XSize, YSize, color);
         
         isClient = false;
         model = modelIn;
+        noMove = false;
         
         menuStuff();
         
@@ -402,11 +406,14 @@ public class BoardController extends Scene {
                 }
                 
                 int worked = 0;
-                if ( (isClient && Arrays.asList(imgView).indexOf(sourcePiece) < 24) || (!isClient && Arrays.asList(imgView).indexOf(sourcePiece) > 24) )
+                if (!noMove)
                 {
-                    worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8);
+                    if ( (isClient && Arrays.asList(imgView).indexOf(sourcePiece) < 24) || (!isClient && Arrays.asList(imgView).indexOf(sourcePiece) > 24) )
+                    {
+                        worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8);
+                    }
+                    model.printBoard();
                 }
-                model.printBoard();
                 
                 if (worked == 1)
                 {
@@ -434,23 +441,40 @@ public class BoardController extends Scene {
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
                         
                         socket.send(sendPacket);
-                        byte[] receiveData = new byte[1024];
-                        boolean noResponse = true;
-                        String sentence = "";
-                        while (noResponse)
-                        {
-                            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                              try {
-                                  socket.receive(receivePacket);
-                              } catch (IOException ex) {
-                                  Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
-                              }
-                              sentence = new String(receivePacket.getData());
-                              if (!sentence.equals(""))
-                              {
-                                  noResponse = false;
-                              }
-                        }
+
+                        noMove = true;
+
+                        
+                    } catch (IOException ex) {
+                        Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else
+                {
+                    Rectangle source = board.get(clickStartIndex);
+                    sourcePiece.xProperty().bind(source.xProperty());
+                    sourcePiece.yProperty().bind(source.yProperty());
+                }
+              }
+            });
+            imgView[i].setOnMouseDragged(new EventHandler<MouseEvent>() {
+              @Override public void handle(MouseEvent mouseEvent) {
+                imgView[i].xProperty().unbind();
+                imgView[i].yProperty().unbind();
+                imgView[i].setX(mouseEvent.getSceneX() + dragDelta.x);
+                imgView[i].setY(mouseEvent.getSceneY() + dragDelta.y);
+              }
+            });
+            imgView[i].setOnMouseEntered(new EventHandler<MouseEvent>() {
+              @Override public void handle(MouseEvent mouseEvent) {
+                imgView[i].setCursor(Cursor.HAND);
+              }
+            });
+        }
+    }
+    
+    public void handleMove(String sentence)
+    {
                         String[] parts = sentence.split("\\,");
                         System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
                         int sourceIndex = Integer.parseInt(parts[0].trim());
@@ -489,35 +513,9 @@ public class BoardController extends Scene {
                                 }
                             }
                         }
-                        
                         model.printBoard();
                         
-                    } catch (IOException ex) {
-                        Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                else
-                {
-                    Rectangle source = board.get(clickStartIndex);
-                    sourcePiece.xProperty().bind(source.xProperty());
-                    sourcePiece.yProperty().bind(source.yProperty());
-                }
-              }
-            });
-            imgView[i].setOnMouseDragged(new EventHandler<MouseEvent>() {
-              @Override public void handle(MouseEvent mouseEvent) {
-                imgView[i].xProperty().unbind();
-                imgView[i].yProperty().unbind();
-                imgView[i].setX(mouseEvent.getSceneX() + dragDelta.x);
-                imgView[i].setY(mouseEvent.getSceneY() + dragDelta.y);
-              }
-            });
-            imgView[i].setOnMouseEntered(new EventHandler<MouseEvent>() {
-              @Override public void handle(MouseEvent mouseEvent) {
-                imgView[i].setCursor(Cursor.HAND);
-              }
-            });
-        }
+                        noMove = false;
     }
 }
 
