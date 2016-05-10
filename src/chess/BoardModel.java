@@ -71,15 +71,6 @@ public class BoardModel {
                 return 0;
             }
         }
-        
-        if (isClient && board[fromX][fromY].getPiece().getColor())
-        {
-            return 0;
-        }
-        if (!isClient && !board[fromX][fromY].getPiece().getColor())
-        {
-            return 0;
-        }
 
         if (board[fromX][fromY].getPiece() instanceof Pawn)
         {

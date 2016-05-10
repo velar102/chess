@@ -401,7 +401,11 @@ public class BoardController extends Scene {
                     }
                 }
                 
-                int worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8, isClient);
+                int worked = 0;
+                if ( (isClient && Arrays.asList(imgView).indexOf(sourcePiece) < 24) || (!isClient && Arrays.asList(imgView).indexOf(sourcePiece) > 24) )
+                {
+                    worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8, isClient);
+                }
                 model.printBoard();
                 
                 if (worked == 1)
