@@ -116,7 +116,7 @@ public class BoardController extends Scene {
                         System.out.println("This is sourceIndex: " + sourceIndex);
                         System.out.println("This is targetIndex: " + targetIndex);
                         
-                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8, isClient);
+                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
                         System.out.println("This is worked2: " + worked2);
                         if (worked2 == 1)
                         {
@@ -404,7 +404,7 @@ public class BoardController extends Scene {
                 int worked = 0;
                 if ( (isClient && Arrays.asList(imgView).indexOf(sourcePiece) < 24) || (!isClient && Arrays.asList(imgView).indexOf(sourcePiece) > 24) )
                 {
-                    worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8, isClient);
+                    worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8);
                 }
                 model.printBoard();
                 
@@ -456,7 +456,7 @@ public class BoardController extends Scene {
                         int sourceIndex = Integer.parseInt(parts[0].trim());
                         int targetIndex = Integer.parseInt(parts[1].trim());
                         
-                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8, isClient);
+                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
                         if (worked2 == 1)
                         {
                             int imgViewSrcIndex = -1;

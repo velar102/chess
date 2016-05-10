@@ -62,7 +62,7 @@ public class BoardModel {
         }
     }
     
-    public int movePiece(int fromX, int fromY, int toX, int toY, boolean isClient)
+    public int movePiece(int fromX, int fromY, int toX, int toY)
     {
         if (board[toX][toY].checkForPiece())
         {
