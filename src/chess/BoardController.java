@@ -455,11 +455,19 @@ public class BoardController extends Scene {
                         int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
                         if (worked2 == 1)
                         {
+                            int imgViewSrcIndex = -1;
+                            for (int m = 0; m < 64; m++)
+                            {
+                                if (board.get(sourceIndex).contains(imgView[m].getX(), imgView[m].getY()))
+                                {
+                                    imgViewSrcIndex = m;
+                                }
+                            }
                             Rectangle target2 = board.get(targetIndex);
-                            imgView[sourceIndex].xProperty().unbind();
-                            imgView[sourceIndex].yProperty().unbind();
-                            imgView[sourceIndex].xProperty().bind(target2.xProperty());
-                            imgView[sourceIndex].yProperty().bind(target2.yProperty());
+                            imgView[imgViewSrcIndex].xProperty().unbind();
+                            imgView[imgViewSrcIndex].yProperty().unbind();
+                            imgView[imgViewSrcIndex].xProperty().bind(target2.xProperty());
+                            imgView[imgViewSrcIndex].yProperty().bind(target2.yProperty());
 
                             for (int z = 0; z < 64; z++)
                             {
