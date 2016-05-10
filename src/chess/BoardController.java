@@ -466,6 +466,8 @@ public class BoardController extends Scene {
                             Rectangle target2 = board.get(targetIndex);
                             imgView[imgViewSrcIndex].xProperty().unbind();
                             imgView[imgViewSrcIndex].yProperty().unbind();
+                            imgView[imgViewSrcIndex].setX(0);
+                            imgView[imgViewSrcIndex].setY(0);
                             imgView[imgViewSrcIndex].xProperty().bind(target2.xProperty());
                             imgView[imgViewSrcIndex].yProperty().bind(target2.yProperty());
 
