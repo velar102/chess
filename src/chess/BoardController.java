@@ -70,7 +70,7 @@ public class BoardController extends Scene {
     {
         try {
             socket = new DatagramSocket();
-            IPAddress = InetAddress.getByName("206.211.154.13");
+            IPAddress = InetAddress.getByName("localhost");
 
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
@@ -116,7 +116,7 @@ public class BoardController extends Scene {
                         System.out.println("This is sourceIndex: " + sourceIndex);
                         System.out.println("This is targetIndex: " + targetIndex);
                         
-                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
+                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8, isClient);
                         System.out.println("This is worked2: " + worked2);
                         if (worked2 == 1)
                         {
@@ -401,7 +401,7 @@ public class BoardController extends Scene {
                     }
                 }
                 
-                int worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8);
+                int worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8, isClient);
                 model.printBoard();
                 
                 if (worked == 1)
@@ -452,7 +452,7 @@ public class BoardController extends Scene {
                         int sourceIndex = Integer.parseInt(parts[0].trim());
                         int targetIndex = Integer.parseInt(parts[1].trim());
                         
-                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
+                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8, isClient);
                         if (worked2 == 1)
                         {
                             int imgViewSrcIndex = -1;
@@ -473,7 +473,7 @@ public class BoardController extends Scene {
 
                             for (int z = 0; z < 64; z++)
                             {
-                                if (z != sourceIndex)
+                                if (z != imgViewSrcIndex)
                                 {
                                     if (target2.contains(imgView[z].getX(), imgView[z].getY()))
                                     {

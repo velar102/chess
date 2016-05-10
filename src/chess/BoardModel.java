@@ -62,11 +62,19 @@ public class BoardModel {
         }
     }
     
-    public int movePiece(int fromX, int fromY, int toX, int toY)
+    public int movePiece(int fromX, int fromY, int toX, int toY, boolean isClient)
     {
         if (board[toX][toY].checkForPiece())
         {
             if (board[fromX][fromY].getPiece().getColor() == board[toX][toY].getPiece().getColor())
+            {
+                return 0;
+            }
+            if (isClient && board[fromX][fromY].getPiece().getColor())
+            {
+                return 0;
+            }
+            if (!isClient && !board[fromX][fromY].getPiece().getColor())
             {
                 return 0;
             }
