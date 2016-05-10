@@ -121,6 +121,8 @@ public class BoardController extends Scene {
                         if (worked2 == 1)
                         {
                             Rectangle target2 = board.get(targetIndex);
+                            imgView[sourceIndex].xProperty().unbind();
+                            imgView[sourceIndex].yProperty().unbind();
                             imgView[sourceIndex].xProperty().bind(target2.xProperty());
                             imgView[sourceIndex].yProperty().bind(target2.yProperty());
 
@@ -454,6 +456,8 @@ public class BoardController extends Scene {
                         if (worked2 == 1)
                         {
                             Rectangle target2 = board.get(targetIndex);
+                            imgView[sourceIndex].xProperty().unbind();
+                            imgView[sourceIndex].yProperty().unbind();
                             imgView[sourceIndex].xProperty().bind(target2.xProperty());
                             imgView[sourceIndex].yProperty().bind(target2.yProperty());
 
