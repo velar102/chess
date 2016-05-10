@@ -70,7 +70,7 @@ public class BoardController extends Scene {
     {
         try {
             socket = new DatagramSocket();
-            IPAddress = InetAddress.getByName("localhost");
+            IPAddress = InetAddress.getByName("206.211.154.13");
 
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
@@ -110,8 +110,8 @@ public class BoardController extends Scene {
                         String[] parts = sentence.split(",");
                         System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
                                                 
-                        int sourceIndex = Integer.parseInt(parts[1].trim());
-                        int targetIndex = Integer.parseInt(parts[0].trim());
+                        int sourceIndex = Integer.parseInt(parts[0].trim());
+                        int targetIndex = Integer.parseInt(parts[1].trim());
                         
                         System.out.println("This is sourceIndex: " + sourceIndex);
                         System.out.println("This is targetIndex: " + targetIndex);
@@ -421,11 +421,10 @@ public class BoardController extends Scene {
                                 }
                             }
                         }
-                        byte[] sendData  = new byte[1024];
-                        String k = Integer.toString(board.indexOf(target));
-                        String q = Integer.toString(Arrays.asList(imgView).indexOf(sourcePiece));
+                        String k = Integer.toString(clickStartIndex);
+                        String q = Integer.toString(i);
                         String send = k + "," + q;
-                        sendData = send.getBytes();
+                        byte[] sendData = send.getBytes();
                         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
                         
                         socket.send(sendPacket);
@@ -447,8 +446,9 @@ public class BoardController extends Scene {
                               }
                         }
                         String[] parts = sentence.split("\\,");
-                        int sourceIndex = Integer.parseInt(parts[1].trim());
-                        int targetIndex = Integer.parseInt(parts[0].trim());
+                        System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
+                        int sourceIndex = Integer.parseInt(parts[0].trim());
+                        int targetIndex = Integer.parseInt(parts[1].trim());
                         
                         int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
                         if (worked2 == 1)
