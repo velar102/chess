@@ -15,6 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -24,6 +26,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class BoardController extends Scene {
+
     Color LIGHT_COLOR = Color.web("lemonchiffon");
     Color DARK_COLOR = Color.web("brown");
 
@@ -31,37 +34,69 @@ public class BoardController extends Scene {
     public ImageView[] imgView;
     private ImageView sourcePiece;
     public MenuBar menuBar;
-    
+    private boolean isReset;
+
     private int clickStartIndex;
-    
-    private void menuStuff()
-    {
+
+    private boolean networked;
+
+    private void menuStuff() {
         menuBar = new MenuBar();
-        
+
         Menu menuNetwork = new Menu("Network");
-        
+
         MenuItem host = new MenuItem("Host");
         host.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent t) {
-                startHosting();
+                if(isReset)
+                {
+                    startHosting();
+                }
+                else
+                {
+                    Dialog d = new Dialog();
+                    d.setContentText("Please reset the board first!");
+                    d.getDialogPane().getButtonTypes().add(ButtonType.OK);
+                    d.showAndWait();
+                }
             }
-        });        
-        
+        });
+
         MenuItem client = new MenuItem("Connect...");
         client.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent t) {
-                startClient();
+                if(isReset)
+                {
+                    startClient();
+                }
+                else
+                {
+                    Dialog d = new Dialog();
+                    d.setContentText("Please reset the board first!");
+                    d.getDialogPane().getButtonTypes().add(ButtonType.OK);
+                    d.showAndWait();
+                }
             }
-        }); 
- 
+        });
+
         menuNetwork.getItems().addAll(host, client);
- 
-        menuBar.getMenus().addAll(menuNetwork);
+        
+        Menu menuBoard = new Menu("Board");
+        
+        MenuItem reset = new MenuItem("Reset");
+        reset.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent t) {
+                Chess.reset();
+            }
+        });
+        
+        menuBoard.getItems().addAll(reset);
+        
+        menuBar.getMenus().addAll(menuNetwork, menuBoard);
     }
     
-    private void startClient()
-    {
-        
+    private void startClient() {
+        networked = true;
         try {
             socket = new DatagramSocket();
             IPAddress = InetAddress.getByName("localhost");
@@ -71,11 +106,12 @@ public class BoardController extends Scene {
 
             String sentence = "Connecting.";
             sendData = sentence.getBytes();
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, 9876);
 
             socket.send(sendPacket);
-        }
-        catch (Exception e) { System.out.println("Connection failed!"); };
+        } catch (Exception e) {
+            System.out.println("Connection failed!");
+        };
 
         /*for (ImageView image : imgView)
         {
@@ -86,79 +122,72 @@ public class BoardController extends Scene {
         byte[] receiveData = new byte[1024];
         boolean noResponse = true;
         String sentence = "";
-        while (noResponse)
-                        {
-                            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                              try {
-                                  socket.receive(receivePacket);
-                              } catch (IOException ex) {
-                                  Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
-                              }
-                              sentence = new String(receivePacket.getData());
-                              if (!sentence.equals(""))
-                              {
-                                  noResponse = false;
-                                  System.out.println("This is sentence: " + sentence);
-                              }
-                        }
-                        String[] parts = sentence.split(",");
-                        System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
-                                                
-                        int sourceIndex = Integer.parseInt(parts[0].trim());
-                        int targetIndex = Integer.parseInt(parts[1].trim());
-                        
-                        System.out.println("This is sourceIndex: " + sourceIndex);
-                        System.out.println("This is targetIndex: " + targetIndex);
-                        
-                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
-                        System.out.println("This is worked2: " + worked2);
-                        if (worked2 == 1)
-                        {
-                            Rectangle target2 = board.get(targetIndex);
-                            imgView[sourceIndex].xProperty().unbind();
-                            imgView[sourceIndex].yProperty().unbind();
-                            imgView[sourceIndex].xProperty().bind(target2.xProperty());
-                            imgView[sourceIndex].yProperty().bind(target2.yProperty());
+        while (noResponse) {
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            try {
+                socket.receive(receivePacket);
+            } catch (IOException ex) {
+                Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            sentence = new String(receivePacket.getData());
+            if (!sentence.equals("")) {
+                noResponse = false;
+                System.out.println("This is sentence: " + sentence);
+            }
+        }
+        String[] parts = sentence.split(",");
+        System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
 
-                            for (int z = 0; z < 64; z++)
-                            {
-                                if (z != sourceIndex)
-                                {
-                                    if (target2.contains(imgView[z].getX(), imgView[z].getY()))
-                                    {
-                                        imgView[z].xProperty().unbind();
-                                        imgView[z].yProperty().unbind();
-                                        imgView[z].setX(999999);
-                                        imgView[z].setY(999999);
-                                    }
-                                }
-                            }
-                        }
-                        
-                        model.printBoard();
-                        
+        int sourceIndex = Integer.parseInt(parts[0].trim());
+        int targetIndex = Integer.parseInt(parts[1].trim());
+
+        System.out.println("This is sourceIndex: " + sourceIndex);
+        System.out.println("This is targetIndex: " + targetIndex);
+
+        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
+        System.out.println("This is worked2: " + worked2);
+        if (worked2 == 1) {
+            isReset = false;
+            Rectangle target2 = board.get(targetIndex);
+            imgView[sourceIndex].xProperty().unbind();
+            imgView[sourceIndex].yProperty().unbind();
+            imgView[sourceIndex].xProperty().bind(target2.xProperty());
+            imgView[sourceIndex].yProperty().bind(target2.yProperty());
+
+            for (int z = 0; z < 64; z++) {
+                if (z != sourceIndex) {
+                    if (target2.contains(imgView[z].getX(), imgView[z].getY())) {
+                        imgView[z].xProperty().unbind();
+                        imgView[z].yProperty().unbind();
+                        imgView[z].setX(999999);
+                        imgView[z].setY(999999);
+                    }
+                }
+            }
+        }
+
+        model.printBoard();
+
         PacketListener pListener = new PacketListener(this, socket);
         Thread t = new Thread(pListener);
+        t.setDaemon(true);
         t.start();
     }
-    
-    private void startHosting()
-    {
+
+    private void startHosting() {
+        networked = true;
         socket = null;
-	  
-	try
-	{
+
+        try {
             socket = new DatagramSocket(9876);
-	}
-	catch(Exception e)
-	{
+        } catch (Exception e) {
             System.out.println("Failed to open UDP socket!");
             System.exit(0);
-	}
+        }
 
-      byte[] receiveData = new byte[1024];
-      
-      DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        byte[] receiveData = new byte[1024];
+
+        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
         try {
             socket.receive(receivePacket);
         } catch (IOException ex) {
@@ -167,12 +196,13 @@ public class BoardController extends Scene {
         String sentence = new String(receivePacket.getData());
         IPAddress = receivePacket.getAddress();
         port = receivePacket.getPort();
-        
+
         PacketListener pListener = new PacketListener(this, socket);
         Thread t = new Thread(pListener);
+        t.setDaemon(true);
         t.start();
     }
-    
+
     private DatagramSocket socket;
     private InetAddress IPAddress;
     private int port;
@@ -182,72 +212,71 @@ public class BoardController extends Scene {
 
     public BoardController(Parent theParent, int XSize, int YSize, Color color, Stage primaryStage, BoardModel modelIn) {
         super(theParent, XSize, YSize, color);
-        
+
+        isReset = true;
         isClient = false;
         model = modelIn;
         noMove = false;
-        
+        networked = false;
+
         menuStuff();
-        
+
         board = new ArrayList<>();
         Rectangle rectangle = new Rectangle();
-        
+
         DoubleBinding squareSize = new DoubleBinding() {
             {
                 super.bind(primaryStage.heightProperty(), primaryStage.widthProperty());
             }
+
             @Override
             protected double computeValue() {
                 if (primaryStage.widthProperty().get() > primaryStage.heightProperty().get()) {
                     return primaryStage.heightProperty().get() / 10;
-                }
-                else {
+                } else {
                     return primaryStage.widthProperty().get() / 10;
                 }
             }
         };
-        
+
         DoubleBinding xOffset = new DoubleBinding() {
             {
                 super.bind(primaryStage.heightProperty(), primaryStage.widthProperty());
             }
-            
+
             @Override
             protected double computeValue() {
                 if (primaryStage.widthProperty().get() > primaryStage.heightProperty().get()) {
-                    return ( (primaryStage.widthProperty().get() - primaryStage.heightProperty().get()) / 2);
-                }
-                else {
+                    return ((primaryStage.widthProperty().get() - primaryStage.heightProperty().get()) / 2);
+                } else {
                     return 0;
                 }
             }
         };
-        
+
         DoubleBinding yOffset = new DoubleBinding() {
             {
                 super.bind(primaryStage.heightProperty(), primaryStage.widthProperty());
             }
-            
+
             @Override
             protected double computeValue() {
                 if (primaryStage.widthProperty().get() > primaryStage.heightProperty().get()) {
                     return 0;
-                }
-                else {
-                    return ( (primaryStage.heightProperty().get() - primaryStage.widthProperty().get()) / 2);
+                } else {
+                    return ((primaryStage.heightProperty().get() - primaryStage.widthProperty().get()) / 2);
                 }
             }
         };
-        
+
         rectangle.setFill(DARK_COLOR);
-        
-        for (int i = 0; i < 64; i++)
-        {
+
+        for (int i = 0; i < 64; i++) {
             board.add(new Rectangle());
         }
-        
+
         imgView = new ImageView[64];
-        
+
         Image whiteRook = new Image("resources/pieceImages/rook.png");
         Image blackRook = new Image("resources/pieceImages/rookB.png");
         Image whiteKnight = new Image("resources/pieceImages/knight.png");
@@ -260,263 +289,294 @@ public class BoardController extends Scene {
         Image blackKing = new Image("resources/pieceImages/kingB.png");
         Image whitePawn = new Image("resources/pieceImages/pawn.png");
         Image blackPawn = new Image("resources/pieceImages/pawnB.png");
-        
+
         for (Rectangle square : board) {
-            
+
             int i = board.indexOf(square);
-            
-            if ( i < 8 || (i > 15 && i < 24) || (i > 31 && i < 40) || (i > 47 && i < 56) )
-            {
+
+            if (i < 8 || (i > 15 && i < 24) || (i > 31 && i < 40) || (i > 47 && i < 56)) {
                 if (i % 2 == 0) {
                     square.setFill(LIGHT_COLOR);
-                }
-                else {
+                } else {
                     square.setFill(DARK_COLOR);
                 }
+            } else if (i % 2 == 0) {
+                square.setFill(DARK_COLOR);
+            } else {
+                square.setFill(LIGHT_COLOR);
             }
-            else
-            {
-                if (i % 2 == 0) {
-                    square.setFill(DARK_COLOR);
-                }
-                else {
-                    square.setFill(LIGHT_COLOR);
-                }
-            }
-            
+
             square.heightProperty().bind(squareSize);
             square.widthProperty().bind(squareSize);
- 
+
             DoubleBinding xPos = new DoubleBinding() {
                 {
                     super.bind(xOffset, squareSize);
                 }
-                
+
                 @Override
                 protected double computeValue() {
                     return (xOffset.get() + ((i % 8) + 1) * squareSize.get());
                 }
             };
             square.xProperty().bind(xPos);
-            
+
             DoubleBinding yPos = new DoubleBinding() {
                 {
                     super.bind(yOffset, squareSize);
                 }
-                
+
                 @Override
                 protected double computeValue() {
-                return (yOffset.get() + ((i / 8) + 1) * squareSize.get());
+                    return (yOffset.get() + ((i / 8) + 1) * squareSize.get());
                 }
             };
-            
+
             square.yProperty().bind(yPos);
-            
-            if (i == 0 || i == 7)
-            {
+
+            if (i == 0 || i == 7) {
                 imgView[i] = new ImageView(blackRook);
-            }
-            else if (i == 1 || i == 6)
-            {
+            } else if (i == 1 || i == 6) {
                 imgView[i] = new ImageView(blackKnight);
-            }
-            else if (i == 2 || i == 5)
-            {
+            } else if (i == 2 || i == 5) {
                 imgView[i] = new ImageView(blackBishop);
-            }
-            else if (i == 3)
-            {
+            } else if (i == 3) {
                 imgView[i] = new ImageView(blackQueen);
-            }            
-            else if (i == 4)
-            {
+            } else if (i == 4) {
                 imgView[i] = new ImageView(blackKing);
-            }  
-            else if (i > 7 && i < 16)
-            {
+            } else if (i > 7 && i < 16) {
                 imgView[i] = new ImageView(blackPawn);
-            }
-            else if (i > 47 && i < 56)
-            {
+            } else if (i > 47 && i < 56) {
                 imgView[i] = new ImageView(whitePawn);
-            }
-            else if (i == 56 || i == 63)
-            {
+            } else if (i == 56 || i == 63) {
                 imgView[i] = new ImageView(whiteRook);
-            }
-            else if (i == 57 || i == 62)
-            {
+            } else if (i == 57 || i == 62) {
                 imgView[i] = new ImageView(whiteKnight);
-            }
-            else if (i == 58 || i == 61)
-            {
+            } else if (i == 58 || i == 61) {
                 imgView[i] = new ImageView(whiteBishop);
-            }
-            else if (i == 59)
-            {
+            } else if (i == 59) {
                 imgView[i] = new ImageView(whiteQueen);
-            }
-            else if (i == 60)
-            {
+            } else if (i == 60) {
                 imgView[i] = new ImageView(whiteKing);
-            }
-            else {
+            } else {
                 imgView[i] = new ImageView();
             }
-            
+
             imgView[i].fitHeightProperty().bind(squareSize);
             imgView[i].fitWidthProperty().bind(squareSize);
             imgView[i].xProperty().bind(square.xProperty());
-            imgView[i].yProperty().bind(square.yProperty());     
-                
+            imgView[i].yProperty().bind(square.yProperty());
+
             final Delta dragDelta = new Delta();
             imgView[i].setOnMousePressed(new EventHandler<MouseEvent>() {
-              @Override public void handle(MouseEvent mouseEvent) {
-                // record a delta distance for the drag and drop operation.
-                
-                dragDelta.x = imgView[i].getX() - mouseEvent.getSceneX();
-                dragDelta.y = imgView[i].getY() - mouseEvent.getSceneY();
-                
-                imgView[i].setCursor(Cursor.MOVE);
-                
-                clickStartIndex = -1;
-                for (Rectangle square : board)
-                {
-                    if (square.contains(mouseEvent.getSceneX(), mouseEvent.getSceneY()))
-                    {
-                        clickStartIndex = board.indexOf(square);
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    // record a delta distance for the drag and drop operation.
+
+                    dragDelta.x = imgView[i].getX() - mouseEvent.getSceneX();
+                    dragDelta.y = imgView[i].getY() - mouseEvent.getSceneY();
+
+                    imgView[i].setCursor(Cursor.MOVE);
+
+                    clickStartIndex = -1;
+                    for (Rectangle square : board) {
+                        if (square.contains(mouseEvent.getSceneX(), mouseEvent.getSceneY())) {
+                            clickStartIndex = board.indexOf(square);
+                        }
                     }
+                    sourcePiece = imgView[i];
                 }
-                sourcePiece = imgView[i];
-              }
             });
             imgView[i].setOnMouseReleased(new EventHandler<MouseEvent>() {
-              @Override public void handle(MouseEvent mouseEvent) {
-                imgView[i].setCursor(Cursor.HAND);
-                 
-                int i = 0;
-                Rectangle target = new Rectangle();
-                for (Rectangle square : board)
-                {
-                    if (square.contains(mouseEvent.getSceneX(), mouseEvent.getSceneY()))
-                    {
-                        target = square;
-                        i = board.indexOf(square);
-                    }
-                }
-                
-                int worked = 0;
-                if (!noMove)
-                {
-                    if ( (isClient && Arrays.asList(imgView).indexOf(sourcePiece) < 24) || (!isClient && Arrays.asList(imgView).indexOf(sourcePiece) > 24) )
-                    {
-                        worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8);
-                    }
-                    model.printBoard();
-                }
-                
-                if (worked == 1)
-                {
-                    try {
-                        sourcePiece.xProperty().bind(target.xProperty());
-                        sourcePiece.yProperty().bind(target.yProperty());
-                        
-                        for (int z = 0; z < 64; z++)
-                        {
-                            if (imgView[z] != sourcePiece)
-                            {
-                                if (target.contains(imgView[z].getX(), imgView[z].getY()))
-                                {
-                                    imgView[z].xProperty().unbind();
-                                    imgView[z].yProperty().unbind();
-                                    imgView[z].setX(999999);
-                                    imgView[z].setY(999999);
-                                }
-                            }
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    imgView[i].setCursor(Cursor.HAND);
+
+                    int i = 0;
+                    Rectangle target = new Rectangle();
+                    for (Rectangle square : board) {
+                        if (square.contains(mouseEvent.getSceneX(), mouseEvent.getSceneY())) {
+                            target = square;
+                            i = board.indexOf(square);
                         }
-                        String k = Integer.toString(clickStartIndex);
-                        String q = Integer.toString(i);
-                        String send = k + "," + q;
-                        byte[] sendData = send.getBytes();
-                        DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
-                        
-                        socket.send(sendPacket);
-
-                        noMove = true;
-
-                        
-                    } catch (IOException ex) {
-                        Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                }
-                else
-                {
-                    Rectangle source = board.get(clickStartIndex);
-                    sourcePiece.xProperty().bind(source.xProperty());
-                    sourcePiece.yProperty().bind(source.yProperty());
-                }
-              }
-            });
-            imgView[i].setOnMouseDragged(new EventHandler<MouseEvent>() {
-              @Override public void handle(MouseEvent mouseEvent) {
-                imgView[i].xProperty().unbind();
-                imgView[i].yProperty().unbind();
-                imgView[i].setX(mouseEvent.getSceneX() + dragDelta.x);
-                imgView[i].setY(mouseEvent.getSceneY() + dragDelta.y);
-              }
-            });
-            imgView[i].setOnMouseEntered(new EventHandler<MouseEvent>() {
-              @Override public void handle(MouseEvent mouseEvent) {
-                imgView[i].setCursor(Cursor.HAND);
-              }
-            });
-        }
-    }
-    
-    public void handleMove(String sentence)
-    {
-                        String[] parts = sentence.split("\\,");
-                        System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
-                        int sourceIndex = Integer.parseInt(parts[0].trim());
-                        int targetIndex = Integer.parseInt(parts[1].trim());
-                        
-                        int worked2 = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
-                        if (worked2 == 1)
-                        {
-                            int imgViewSrcIndex = -1;
-                            for (int m = 0; m < 64; m++)
-                            {
-                                if (board.get(sourceIndex).contains(imgView[m].getX(), imgView[m].getY()))
-                                {
-                                    imgViewSrcIndex = m;
-                                }
-                            }
-                            Rectangle target2 = board.get(targetIndex);
-                            imgView[imgViewSrcIndex].xProperty().unbind();
-                            imgView[imgViewSrcIndex].yProperty().unbind();
-                            imgView[imgViewSrcIndex].setX(0);
-                            imgView[imgViewSrcIndex].setY(0);
-                            imgView[imgViewSrcIndex].xProperty().bind(target2.xProperty());
-                            imgView[imgViewSrcIndex].yProperty().bind(target2.yProperty());
 
-                            for (int z = 0; z < 64; z++)
-                            {
-                                if (z != imgViewSrcIndex)
-                                {
-                                    if (target2.contains(imgView[z].getX(), imgView[z].getY()))
-                                    {
-                                        imgView[z].xProperty().unbind();
-                                        imgView[z].yProperty().unbind();
-                                        imgView[z].setX(999999);
-                                        imgView[z].setY(999999);
+                    int worked = 0;
+                    if (!noMove) {
+                        if (!networked || (isClient && Arrays.asList(imgView).indexOf(sourcePiece) < 24) || (!isClient && Arrays.asList(imgView).indexOf(sourcePiece) > 24)) {
+                            worked = model.movePiece(clickStartIndex % 8, clickStartIndex / 8, i % 8, i / 8);
+                        }
+                        model.printBoard();
+                    }
+
+                    if (worked > 0) {
+                        isReset = false;
+                        try {
+                            sourcePiece.xProperty().bind(target.xProperty());
+                            sourcePiece.yProperty().bind(target.yProperty());
+
+                            if (worked == 1) {
+                                for (int z = 0; z < 64; z++) {
+                                    if (imgView[z] != sourcePiece) {
+                                        if (target.contains(imgView[z].getX(), imgView[z].getY())) {
+                                            imgView[z].xProperty().unbind();
+                                            imgView[z].yProperty().unbind();
+                                            imgView[z].setX(999999);
+                                            imgView[z].setY(999999);
+                                        }
                                     }
                                 }
                             }
+
+                            if (worked == 2) {
+                                Rectangle rooktangle = new Rectangle();
+                                Rectangle rooktarget = new Rectangle();
+                                switch (board.indexOf(target)) {
+                                    case 2:
+                                        rooktangle = board.get(0);
+                                        rooktarget = board.get(3);
+                                        break;
+                                    case 6:
+                                        rooktangle = board.get(7);
+                                        rooktarget = board.get(5);
+                                        break;
+                                    case 58:
+                                        rooktangle = board.get(56);
+                                        rooktarget = board.get(59);
+                                        break;
+                                    case 62:
+                                        rooktangle = board.get(63);
+                                        rooktarget = board.get(61);
+                                        break;
+                                    default:
+                                        break;
+                                }
+
+                                for (int z = 0; z < 64; z++) {
+                                    if (rooktangle.contains(imgView[z].getX(), imgView[z].getY())) {
+                                        imgView[z].xProperty().unbind();
+                                        imgView[z].yProperty().unbind();
+                                        imgView[z].xProperty().bind(rooktarget.xProperty());
+                                        imgView[z].yProperty().bind(rooktarget.yProperty());
+                                    }
+                                }
+                            }
+
+                            if (networked) {
+                                String k = Integer.toString(clickStartIndex);
+                                String q = Integer.toString(i);
+                                String send = k + "," + q;
+                                byte[] sendData = send.getBytes();
+                                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port);
+
+                                socket.send(sendPacket);
+
+                                noMove = true;
+                            }
+
+                        } catch (IOException ex) {
+                            Logger.getLogger(BoardController.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                        model.printBoard();
-                        
-                        noMove = false;
+                    } else {
+                        Rectangle source = board.get(clickStartIndex);
+                        sourcePiece.xProperty().bind(source.xProperty());
+                        sourcePiece.yProperty().bind(source.yProperty());
+                    }
+                }
+            });
+            imgView[i].setOnMouseDragged(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    imgView[i].xProperty().unbind();
+                    imgView[i].yProperty().unbind();
+                    imgView[i].setX(mouseEvent.getSceneX() + dragDelta.x);
+                    imgView[i].setY(mouseEvent.getSceneY() + dragDelta.y);
+                }
+            });
+            imgView[i].setOnMouseEntered(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    imgView[i].setCursor(Cursor.HAND);
+                }
+            });
+        }
+    }
+
+    public void handleMove(String sentence) {
+        String[] parts = sentence.split("\\,");
+        System.out.println("This is parts: " + parts[0] + ", " + parts[1]);
+        int sourceIndex = Integer.parseInt(parts[0].trim());
+        int targetIndex = Integer.parseInt(parts[1].trim());
+
+        int worked = model.movePiece(sourceIndex % 8, sourceIndex / 8, targetIndex % 8, targetIndex / 8);
+        if (worked > 0) {
+            isReset = false;
+            int imgViewSrcIndex = -1;
+            for (int m = 0; m < 64; m++) {
+                if (board.get(sourceIndex).contains(imgView[m].getX(), imgView[m].getY())) {
+                    imgViewSrcIndex = m;
+                }
+            }
+            Rectangle target2 = board.get(targetIndex);
+            imgView[imgViewSrcIndex].xProperty().unbind();
+            imgView[imgViewSrcIndex].yProperty().unbind();
+            imgView[imgViewSrcIndex].xProperty().bind(target2.xProperty());
+            imgView[imgViewSrcIndex].yProperty().bind(target2.yProperty());
+
+            if (worked == 1) {
+                for (int z = 0; z < 64; z++) {
+                    if (z != imgViewSrcIndex) {
+                        if (target2.contains(imgView[z].getX(), imgView[z].getY())) {
+                            imgView[z].xProperty().unbind();
+                            imgView[z].yProperty().unbind();
+                            imgView[z].setX(999999);
+                            imgView[z].setY(999999);
+                        }
+                    }
+                }
+            }
+
+            if (worked == 2) {
+                Rectangle rooktangle = new Rectangle();
+                Rectangle rooktarget = new Rectangle();
+                switch (targetIndex) {
+                    case 2:
+                        rooktangle = board.get(0);
+                        rooktarget = board.get(3);
+                        break;
+                    case 6:
+                        rooktangle = board.get(7);
+                        rooktarget = board.get(5);
+                        break;
+                    case 58:
+                        rooktangle = board.get(56);
+                        rooktarget = board.get(59);
+                        break;
+                    case 62:
+                        rooktangle = board.get(63);
+                        rooktarget = board.get(61);
+                        break;
+                    default:
+                        break;
+                }
+
+                for (int z = 0; z < 64; z++) {
+                    if (rooktangle.contains(imgView[z].getX(), imgView[z].getY())) {
+                        imgView[z].xProperty().unbind();
+                        imgView[z].yProperty().unbind();
+                        imgView[z].xProperty().bind(rooktarget.xProperty());
+                        imgView[z].yProperty().bind(rooktarget.yProperty());
+                    }
+                }
+            }
+        }
+        model.printBoard();
+
+        noMove = false;
     }
 }
 
-class Delta { double x, y; }
+class Delta {
+
+    double x, y;
+}

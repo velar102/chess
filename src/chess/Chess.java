@@ -8,44 +8,19 @@ package chess;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import javafx.scene.Group;
-import javafx.scene.control.*;
 import javafx.scene.effect.*;
 import java.util.AbstractMap.SimpleEntry;
 import javafx.scene.paint.Color;
 import java.util.Map.Entry;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.transform.Rotate;
 
 /**
  *
  * @author Eagle
  */
 public class Chess extends Application {
+
+    private static Stage primStage;
     
-    
-        /*
-    public void start(Stage primaryStage) {
-        Button btn = new Button();
-        btn.setText("Say 'Hello World'");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
-            
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Hello World!");
-            }
-        });
-        
-        StackPane root = new StackPane();
-        root.getChildren().add(btn);
-        
-        Scene scene = new Scene(root, 300, 250);
-        
-        primaryStage.setTitle("Hello World!");
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }*/
     final Entry<String, Effect>[] effects = new Entry[] {
         new SimpleEntry<String, Effect>("Sepia Tone", new SepiaTone()),
         new SimpleEntry<String, Effect>("Glow", new Glow()),
@@ -59,21 +34,18 @@ public class Chess extends Application {
         primaryStage.setY(0);
         primaryStage.setWidth(1600);
         primaryStage.setHeight(900);
-
-        Group root = new Group();
+        primStage = primaryStage;
         
+        Group root = new Group();
         BoardModel model = new BoardModel();
         BoardController board = new BoardController(root, 0, 0, Color.BURLYWOOD, primaryStage, model);
         
         model.printBoard();
  
         root.getChildren().addAll(board.menuBar);
-        
         root.getChildren().addAll(board.board);
         root.getChildren().addAll(board.imgView);
-        
- 
-        
+
         primaryStage.setScene(board);
         primaryStage.show();
         
@@ -103,4 +75,18 @@ public class Chess extends Application {
 
     }
     
+    public static void reset()
+    {
+        Group root = new Group();
+        BoardModel model = new BoardModel();
+        BoardController board = new BoardController(root, 0, 0, Color.BURLYWOOD, primStage, model);
+        
+        model.printBoard();
+
+        root.getChildren().addAll(board.menuBar);
+        root.getChildren().addAll(board.board);
+        root.getChildren().addAll(board.imgView);
+        
+        primStage.setScene(board);
+    }
 }

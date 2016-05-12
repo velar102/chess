@@ -27,7 +27,7 @@ public class PacketListener implements Runnable {
 
     @Override
     public void run() {
-        while(true)
+        while(!Thread.interrupted())
         {
             byte[] receiveData = new byte[1024];
             boolean noResponse = true;
