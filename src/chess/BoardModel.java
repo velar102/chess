@@ -1,21 +1,24 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * This is the board model that controls the state of the chess board and where all the pieces are.
  */
 package chess;
 
 /**
- *
- * @author Drago
+ * @author Rio Velarde
+ * @author Austin Thiel
  */
 public class BoardModel {
 
+    // The 2D array to store the board squares in.
     private final Square[][] board;
 
+    // The constructor to initalize a new board.
     public BoardModel() {
         board = new Square[8][8];
+        // Fills the board with Square objects (defined in Square.java).
 
+        // The following simply puts all the pieces in their proper starting spaces on the board and assigns the proper color boolean to them.
+        // True for white and false for black.
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
                 boolean color = (y >= 3);
@@ -54,6 +57,14 @@ public class BoardModel {
         }
     }
 
+    // An alternate constructor allows the creation of a model with the specified structure. Unused as of now.
+    public BoardModel(Square[][] board) {
+        this.board = board;
+    }
+
+    // This is the method the controller will call to send moves to the model.
+    // Basically, it just checks to make sure a piece is not moving onto a piece of the same color
+    // and then calls the proper method for the piece being moved.
     public int movePiece(int fromX, int fromY, int toX, int toY) {
         if (board[toX][toY].checkForPiece()) {
             if (board[fromX][fromY].getPiece().getColor() == board[toX][toY].getPiece().getColor()) {
@@ -77,9 +88,13 @@ public class BoardModel {
 
         return 0;
     }
+    // 0 is returned if the move is not allowed and a positive number is returned if the move was successful.
 
+    // Checks if the move meets one of the valid move types for a pawn and updates the model if so.
     private int movePawn(int fromX, int fromY, int toX, int toY) {
         int offset;
+
+        // Casts the piece from the board into a pawn object to test for valid movement.
         Pawn pawn = (Pawn) board[fromX][fromY].getPiece();
 
         if (pawn.getColor()) {
@@ -101,10 +116,12 @@ public class BoardModel {
     private int moveKing(int fromX, int fromY, int toX, int toY) {
         King king = (King) board[fromX][fromY].getPiece();
         if ((Math.abs(toX - fromX) == 1 || Math.abs(toX - fromX) == 0) && (Math.abs(toY - fromY) == 1 || Math.abs(toY - fromY) == 0)) {
-            king.setMoved();
+            king.setMoved(); // If the move was valid, states in a variable that the king has moved. Castling is no longer possible.
             board[fromX][fromY].setPiece();
             board[toX][toY].setPiece(king);
             return 1;
+
+            // Checks for the four valid castling possibilities if the king has yet to move and the corresponding rook has yet to move.
         } else if (!king.checkIfMoved() && Math.abs(toX - fromX) == 2 && ((fromY == 0 && toY == 0) || (fromY == 7 && toY == 7))) {
             if (toX - fromX > 0) {
                 for (int i = 1; i < 3; i++) {
@@ -152,6 +169,7 @@ public class BoardModel {
         return 0;
     }
 
+    // Checks if a knight move is valid.
     private int moveKnight(int fromX, int fromY, int toX, int toY) {
         Knight knight = (Knight) board[fromX][fromY].getPiece();
         if ((Math.abs(toX - fromX) == 2 && Math.abs(toY - fromY) == 1) || (Math.abs(toY - fromY) == 2 && Math.abs(toX - fromX) == 1)) {
@@ -163,6 +181,7 @@ public class BoardModel {
         return 0;
     }
 
+    // Checks if a bishop move is valid.
     private int moveBishop(int fromX, int fromY, int toX, int toY) {
         Bishop bishop = (Bishop) board[fromX][fromY].getPiece();
         if (Math.abs(toX - fromX) == Math.abs(toY - fromY)) {
@@ -195,6 +214,53 @@ public class BoardModel {
         return 0;
     }
 
+    // Checks if a Rook move is valid.
+    private int moveRook(int fromX, int fromY, int toX, int toY) {
+        Rook rook = (Rook) board[fromX][fromY].getPiece();
+
+        if (toX == fromX) {
+            int offsetY;
+            if (toY > fromY) {
+                offsetY = 1;
+            } else {
+                offsetY = -1;
+            }
+
+            for (int i = 1; i < Math.abs(toY - fromY); i++) {
+                if (board[fromX][fromY + i * offsetY].checkForPiece()) {
+                    return 0;
+                }
+            }
+
+            rook.setMoved();
+            board[fromX][fromY].setPiece();
+            board[toX][toY].setPiece(rook);
+            return 1;
+        } else if (toY == fromY) {
+            int offsetX;
+
+            if (toX > fromX) {
+                offsetX = 1;
+            } else {
+                offsetX = -1;
+            }
+
+            for (int i = 1; i < Math.abs(toX - fromX); i++) {
+                if (board[fromX + i * offsetX][fromY].checkForPiece()) {
+                    return 0;
+                }
+            }
+
+            rook.setMoved();
+            board[fromX][fromY].setPiece();
+            board[toX][toY].setPiece(rook);
+            return 1;
+        }
+
+        return 0;
+    }
+
+    // Checks if a Queen move is valid (just copies and puts together the rook and bishop movement code.)
     private int moveQueen(int fromX, int fromY, int toX, int toY) {
         Queen queen = (Queen) board[fromX][fromY].getPiece();
 
@@ -262,51 +328,7 @@ public class BoardModel {
         return 0;
     }
 
-    private int moveRook(int fromX, int fromY, int toX, int toY) {
-        Rook rook = (Rook) board[fromX][fromY].getPiece();
-
-        if (toX == fromX) {
-            int offsetY;
-            if (toY > fromY) {
-                offsetY = 1;
-            } else {
-                offsetY = -1;
-            }
-
-            for (int i = 1; i < Math.abs(toY - fromY); i++) {
-                if (board[fromX][fromY + i * offsetY].checkForPiece()) {
-                    return 0;
-                }
-            }
-
-            rook.setMoved();
-            board[fromX][fromY].setPiece();
-            board[toX][toY].setPiece(rook);
-            return 1;
-        } else if (toY == fromY) {
-            int offsetX;
-
-            if (toX > fromX) {
-                offsetX = 1;
-            } else {
-                offsetX = -1;
-            }
-
-            for (int i = 1; i < Math.abs(toX - fromX); i++) {
-                if (board[fromX + i * offsetX][fromY].checkForPiece()) {
-                    return 0;
-                }
-            }
-
-            rook.setMoved();
-            board[fromX][fromY].setPiece();
-            board[toX][toY].setPiece(rook);
-            return 1;
-        }
-
-        return 0;
-    }
-
+    // A publicly accessible method to print the board when called.
     public void printBoard() {
         System.out.println("-------------");
         for (int y = 0; y < 8; y++) {
